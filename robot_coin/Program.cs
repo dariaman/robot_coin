@@ -12,6 +12,7 @@ var NICEHASH_PRICE_URL = Environment.GetEnvironmentVariable("NICEHASH_PRICE_URL"
 
 var AWS_ACCESS_KEY = Environment.GetEnvironmentVariable("AWS_ACCESS_KEY", EnvironmentVariableTarget.User);
 var AWS_SECRET_KEY = Environment.GetEnvironmentVariable("AWS_SECRET_KEY", EnvironmentVariableTarget.User);
+var DATE_NOW = DateTime.Now;
 
 if (AWS_ACCESS_KEY == null || AWS_SECRET_KEY == null)
 {
@@ -31,42 +32,95 @@ if (NICEHASH_PRICE_URL == null)
     Environment.Exit(0);
 }
 
+var _telegram = new TelegramBot();
+await _telegram.SendStatusAsync("Tgl start =>" + DATE_NOW.ToString("dd MMM yyyy HH:mm:ss") + $" >> " + DATE_NOW.ToString("yyyyMMddHHmmss"));
+
 var PriceNicehash = await GetPriceNicehashAsync();
 var PriceIndodax = await GetPriceIndodaxAsync();
 
 
 var awsCredentials = new Amazon.Runtime.BasicAWSCredentials(AWS_ACCESS_KEY, AWS_SECRET_KEY);
-var client = new AmazonDynamoDBClient(awsCredentials, RegionEndpoint.APSoutheast1); // singapore
+var client_db = new AmazonDynamoDBClient(awsCredentials, RegionEndpoint.APSoutheast1); // singapore
 
 if (PriceNicehash != null || PriceIndodax != null)
 {
-    string TableName;
-    if (PriceNicehash?.AAVEBTC > 0 || PriceNicehash?.AAVEUSDT > 0 || PriceIndodax?.aave_idr > 0)
-    {
-        TableName = "AAVE";
-        await CreateTableIfExist(client, TableName);
-        ///// write data to table
-        try
-        {
-            Table tabel_coin = Table.LoadTable(client, TableName);
-            var price_usdt = new Document();
-            price_usdt["dateString"] = DateTime.Now.ToString("yyyyMMddHHmmss");
-            price_usdt["USDT"] = PriceNicehash?.AAVEUSDT;
-            price_usdt["BTC"] = PriceNicehash?.AAVEBTC;
-            price_usdt["IDR"] = PriceIndodax?.aave_idr;
+    if (PriceNicehash?.AAVEUSDT > 0 || PriceNicehash?.AAVEBTC > 0 || PriceIndodax?.aave_idr > 0)
+        await InsertCoin(client_db, "AAVE", PriceNicehash?.AAVEUSDT, PriceNicehash?.AAVEBTC, PriceIndodax?.aave_idr);
 
-            await tabel_coin.PutItemAsync(price_usdt);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex.ToString());
-        }
-    }
+    if (PriceNicehash?.ADAUSDT > 0 || PriceNicehash?.ADABTC > 0 || PriceIndodax?.ada_idr > 0)
+        await InsertCoin(client_db, "ADA", PriceNicehash?.ADAUSDT, PriceNicehash?.ADABTC, PriceIndodax?.ada_idr);
+
+    if (PriceNicehash?.BTCUSDT > 0  || PriceIndodax?.btc_idr > 0)
+        await InsertCoin(client_db, "BTC", PriceNicehash?.BTCUSDT, 1, PriceIndodax?.btc_idr);
+
+    if (PriceNicehash?.ETHUSDT > 0 || PriceNicehash?.ETHBTC > 0 || PriceIndodax?.eth_idr > 0)
+        await InsertCoin(client_db, "ETH", PriceNicehash?.ETHUSDT, PriceNicehash?.ETHBTC, PriceIndodax?.eth_idr);
+
+    if (PriceNicehash?.ONEINCHUSDT > 0 || PriceNicehash?.ONEINCHBTC > 0 || PriceIndodax?.inch_idr > 0)
+        await InsertCoin(client_db, "INCH", PriceNicehash?.ONEINCHUSDT, PriceNicehash?.ONEINCHBTC, PriceIndodax?.inch_idr);
+
+    if (PriceNicehash?.CHZUSDT > 0 || PriceNicehash?.CHZBTC > 0 || PriceIndodax?.chz_idr > 0)
+        await InsertCoin(client_db, "CHZ", PriceNicehash?.CHZUSDT, PriceNicehash?.CHZBTC, PriceIndodax?.chz_idr);
+
+    if (PriceNicehash?.CRVUSDT > 0 || PriceNicehash?.CRVBTC > 0 || PriceIndodax?.crv_idr > 0)
+        await InsertCoin(client_db, "CRV", PriceNicehash?.CRVUSDT, PriceNicehash?.CRVBTC, PriceIndodax?.crv_idr);
+
+    if (PriceNicehash?.DOGEUSDT > 0 || PriceNicehash?.DOGEBTC > 0 || PriceIndodax?.doge_idr > 0)
+        await InsertCoin(client_db, "DOGE", PriceNicehash?.DOGEUSDT, PriceNicehash?.DOGEBTC, PriceIndodax?.doge_idr);
+
+    if (PriceNicehash?.GRTUSDT > 0 || PriceNicehash?.GRTBTC > 0 || PriceIndodax?.grt_idr > 0)
+        await InsertCoin(client_db, "GRT", PriceNicehash?.GRTUSDT, PriceNicehash?.GRTBTC, PriceIndodax?.grt_idr);
+
+    if (PriceNicehash?.HBARUSDT > 0 || PriceNicehash?.HBARBTC > 0 || PriceIndodax?.hbar_idr > 0)
+        await InsertCoin(client_db, "HBAR", PriceNicehash?.HBARUSDT, PriceNicehash?.HBARBTC, PriceIndodax?.hbar_idr);
+
+    if (PriceNicehash?.LRCUSDT > 0 || PriceNicehash?.LRCBTC > 0 || PriceIndodax?.lrc_idr > 0)
+        await InsertCoin(client_db, "LRC", PriceNicehash?.LRCUSDT, PriceNicehash?.LRCBTC, PriceIndodax?.lrc_idr);
+
+    if (PriceNicehash?.LTCUSDT > 0 || PriceNicehash?.LTCBTC > 0 || PriceIndodax?.ltc_idr > 0)
+        await InsertCoin(client_db, "LTC", PriceNicehash?.LTCUSDT, PriceNicehash?.LTCBTC, PriceIndodax?.ltc_idr);
+
+    if (PriceNicehash?.RVNUSDT > 0 || PriceNicehash?.RVNBTC > 0 || PriceIndodax?.rvn_idr > 0)
+        await InsertCoin(client_db, "RVN", PriceNicehash?.RVNUSDT, PriceNicehash?.RVNBTC, PriceIndodax?.rvn_idr);
+
+    if (PriceNicehash?.SANDUSDT > 0 || PriceNicehash?.SANDBTC > 0 || PriceIndodax?.sand_idr > 0)
+        await InsertCoin(client_db, "SAND", PriceNicehash?.SANDUSDT, PriceNicehash?.SANDBTC, PriceIndodax?.sand_idr);
+
+    if (PriceNicehash?.SUSHIUSDT > 0 || PriceNicehash?.SUSHIBTC > 0 || PriceIndodax?.sushi_idr > 0)
+        await InsertCoin(client_db, "SUSHI", PriceNicehash?.SUSHIUSDT, PriceNicehash?.SUSHIBTC, PriceIndodax?.sushi_idr);
+
+    if (PriceNicehash?.UNIUSDT > 0 || PriceNicehash?.UNIBTC > 0 || PriceIndodax?.uni_idr > 0)
+        await InsertCoin(client_db, "UNI", PriceNicehash?.UNIUSDT, PriceNicehash?.UNIBTC, PriceIndodax?.uni_idr);
+
+    if (PriceNicehash?.XRPUSDT > 0 || PriceNicehash?.XRPBTC > 0 || PriceIndodax?.xrp_idr > 0)
+        await InsertCoin(client_db, "XRP", PriceNicehash?.XRPUSDT, PriceNicehash?.XRPBTC, PriceIndodax?.xrp_idr);
 
 }
 
 //Console.ReadLine();
 
+async Task InsertCoin(IAmazonDynamoDB client, string TableName, decimal? usdt, decimal? btc, int? idr)
+{
+    await CreateTableIfExist(client, TableName);
+    ///// write data to table
+    try
+    {
+        Table tabel_coin = Table.LoadTable(client, TableName);
+        var price_usdt = new Document
+        {
+            ["dateString"] = DATE_NOW.ToString("yyyyMMddHHmmss"),
+            ["USDT"] = usdt,
+            ["BTC"] = btc,
+            ["IDR"] = idr
+        };
+
+        await tabel_coin.PutItemAsync(price_usdt);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(ex.ToString());
+    }
+}
 
 // ===================================Baca/Tulis data pakai DBContext=================================================================
 //try
@@ -178,9 +232,21 @@ async Task<Indodax_Price?> GetPriceIndodaxAsync()
         if (jObject["tickers"]?["aave_idr"]?["last"] != null) coin.aave_idr = (int)jObject["tickers"]?["aave_idr"]?["last"];
         if (jObject["tickers"]?["ada_idr"]?["last"] != null) coin.ada_idr = (int)jObject["tickers"]?["ada_idr"]?["last"];
         if (jObject["tickers"]?["btc_idr"]?["last"] != null) coin.btc_idr = (int)jObject["tickers"]?["btc_idr"]?["last"];
-
-
-
+        if (jObject["tickers"]?["1inch_idr"]?["last"] != null) coin.inch_idr = (int)jObject["tickers"]?["1inch_idr"]?["last"];
+        if (jObject["tickers"]?["ada_idr"]?["last"] != null) coin.ada_idr = (int)jObject["tickers"]?["ada_idr"]?["last"];
+        if (jObject["tickers"]?["chz_idr"]?["last"] != null) coin.chz_idr = (int)jObject["tickers"]?["chz_idr"]?["last"];
+        if (jObject["tickers"]?["crv_idr"]?["last"] != null) coin.crv_idr = (int)jObject["tickers"]?["crv_idr"]?["last"];
+        if (jObject["tickers"]?["doge_idr"]?["last"] != null) coin.doge_idr = (int)jObject["tickers"]?["doge_idr"]?["last"];
+        if (jObject["tickers"]?["eth_idr"]?["last"] != null) coin.eth_idr = (int)jObject["tickers"]?["eth_idr"]?["last"];
+        if (jObject["tickers"]?["grt_idr"]?["last"] != null) coin.grt_idr = (int)jObject["tickers"]?["grt_idr"]?["last"];
+        if (jObject["tickers"]?["hbar_idr"]?["last"] != null) coin.hbar_idr = (int)jObject["tickers"]?["hbar_idr"]?["last"];
+        if (jObject["tickers"]?["lrc_idr"]?["last"] != null) coin.lrc_idr = (int)jObject["tickers"]?["lrc_idr"]?["last"];
+        if (jObject["tickers"]?["ltc_idr"]?["last"] != null) coin.ltc_idr = (int)jObject["tickers"]?["ltc_idr"]?["last"];
+        if (jObject["tickers"]?["rvn_idr"]?["last"] != null) coin.rvn_idr = (int)jObject["tickers"]?["rvn_idr"]?["last"];
+        if (jObject["tickers"]?["sand_idr"]?["last"] != null) coin.sand_idr = (int)jObject["tickers"]?["sand_idr"]?["last"];
+        if (jObject["tickers"]?["sushi_idr"]?["last"] != null) coin.sushi_idr = (int)jObject["tickers"]?["sushi_idr"]?["last"];
+        if (jObject["tickers"]?["uni_idr"]?["last"] != null) coin.uni_idr = (int)jObject["tickers"]?["uni_idr"]?["last"];
+        if (jObject["tickers"]?["xrp_idr"]?["last"] != null) coin.xrp_idr = (int)jObject["tickers"]?["xrp_idr"]?["last"];
 
         return coin;
     }
