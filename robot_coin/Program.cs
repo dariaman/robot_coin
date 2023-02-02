@@ -121,7 +121,8 @@ namespace robot_coin
                 var LastPrice = await GetLastCoinPrice(client, CoinCode);
                 if (LastPrice.USDT == usdt && LastPrice.BTC == btc && LastPrice.IDR == idr)
                 {
-                    await _telegram.SendMessageAsync($"{CoinCode} >> nilainya sebelumnya {LastPrice.USDT} | {LastPrice.BTC} | {LastPrice.IDR}" + "\n"
+                    await _telegram.SendMessageAsync(DATE_NOW.ToString("yyyyMMddHHmmss") + "\n" +
+                        $"\n{CoinCode} >> nilainya sebelumnya {LastPrice.USDT} | {LastPrice.BTC} | {LastPrice.IDR}" + "\n"
                         + $"{CoinCode} >> nilainya insert {usdt} | {btc} | {idr}");
                     return;
                 }
