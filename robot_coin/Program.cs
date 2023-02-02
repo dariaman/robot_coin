@@ -2,6 +2,7 @@
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
+using Microsoft.VisualBasic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -115,10 +116,14 @@ namespace robot_coin
 
             }
 
-            //Console.ReadLine();
-
             async Task InsertCoin(IAmazonDynamoDB client, string CoinCode, decimal? usdt, decimal? btc, int? idr)
             {
+                var LastPrice = await GetLastCoinPrice(client, CoinCode);
+                if (LastPrice.USDT == usdt && LastPrice.BTC == btc && LastPrice.IDR == idr)
+                {
+                    Console.WriteLine($"{CoinCode} >> nilainya sama dengan sebelumnya {LastPrice.USDT} {LastPrice.BTC} {LastPrice.IDR}");
+                    return;
+                }
 
                 string TableName = "CoinPrice";
                 await CreateTableIfExist(client, TableName);
@@ -134,13 +139,53 @@ namespace robot_coin
                         ["BTC"] = btc,
                         ["IDR"] = idr
                     };
-
                     await tabel_coin.PutItemAsync(price_usdt);
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine(ex.ToString());
+                    await _telegram.SendErrorAsync("Tgl =>" + DATE_NOW.ToString("dd MMM yyyy HH:mm:ss") + "\\n\\n" + (ex.InnerException?.Message ?? ex.Message));
                 }
+            }
+
+            async Task<CoinPrice> GetLastCoinPrice(IAmazonDynamoDB client, string CoinCode)
+            {
+                CoinPrice LatestPrice = new();
+
+                var request = new QueryRequest
+                {
+                    TableName = "CoinPrice",
+                    KeyConditionExpression = $"CoinCode = :vCoinCode",
+                    ExpressionAttributeValues = new Dictionary<string, AttributeValue> {
+                            { ":vCoinCode", new AttributeValue { S = CoinCode } } },
+                    // Optional parameter.
+                    ConsistentRead = true,
+                    Limit = 1,
+                    ExclusiveStartKey = null,
+                    ScanIndexForward = false
+                };
+
+                var response = await client.QueryAsync(request);
+
+                if (response.Items.Count > 0)
+                {
+
+                    foreach (Dictionary<string, AttributeValue> item in response.Items)
+                    {
+
+                        foreach (KeyValuePair<string, AttributeValue> kvp in item)
+                        {
+                            Console.WriteLine($"Atribute Name >> {kvp.Key}");
+                            Console.WriteLine($"Atribute Value >> {kvp.Value.N}");
+                            Console.WriteLine("===>>>>>");
+                            if (kvp.Key.ToUpper() == "USDT") LatestPrice.USDT = decimal.Parse(kvp.Value.N);
+                            if (kvp.Key.ToUpper() == "BTC") LatestPrice.BTC = decimal.Parse(kvp.Value.N);
+                            if (kvp.Key.ToUpper() == "IDR") LatestPrice.IDR = Int32.Parse(kvp.Value.N);
+                        }
+                        Console.WriteLine("************************************************");
+                    }
+                }
+                return LatestPrice;
             }
 
             static async Task CreateTableIfExist(IAmazonDynamoDB client, string tableName)
