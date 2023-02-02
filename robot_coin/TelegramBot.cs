@@ -1,5 +1,4 @@
-﻿
-using Telegram.Bot.Types.Enums;
+﻿using Telegram.Bot.Types.Enums;
 using Telegram.Bot;
 
 namespace robot_coin

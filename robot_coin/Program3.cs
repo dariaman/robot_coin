@@ -1,15 +1,15 @@
-﻿using Amazon;
-using Amazon.DynamoDBv2;
-using Amazon.DynamoDBv2.DocumentModel;
+﻿using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
-using Newtonsoft.Json;
+using Amazon.DynamoDBv2;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
+using Amazon;
 
 namespace robot_coin
 {
-
-    internal class Program
+    internal class Program3
     {
+
         //EnvironmentVariableTarget dihilangkan kalau deploy di linux
         static string TELEGRAM_TOKEN_BOT = Environment.GetEnvironmentVariable("TELEGRAM_TOKEN_BOT", EnvironmentVariableTarget.User);
         static string TELEGRAM_CHATID_ERROR = Environment.GetEnvironmentVariable("TELEGRAM_CHATID_ERROR", EnvironmentVariableTarget.User);
@@ -23,7 +23,7 @@ namespace robot_coin
         static string AWS_SECRET_KEY = Environment.GetEnvironmentVariable("AWS_SECRET_KEY", EnvironmentVariableTarget.User);
         static DateTime DATE_NOW = DateTime.Now;
 
-        private static async Task Main(string[] args)
+        private async Task Main(string[] args)
         {
 
             if (AWS_ACCESS_KEY == null || AWS_SECRET_KEY == null)
@@ -117,10 +117,8 @@ namespace robot_coin
 
             //Console.ReadLine();
 
-            async Task InsertCoin(IAmazonDynamoDB client, string CoinCode, decimal? usdt, decimal? btc, int? idr)
+            async Task InsertCoin(IAmazonDynamoDB client, string TableName, decimal? usdt, decimal? btc, int? idr)
             {
-
-                string TableName = "CoinPrice";
                 await CreateTableIfExist(client, TableName);
                 ///// write data to table
                 try
@@ -128,8 +126,7 @@ namespace robot_coin
                     Table tabel_coin = Table.LoadTable(client, TableName);
                     var price_usdt = new Document
                     {
-                        ["CoinCode"] = CoinCode,
-                        ["DateString"] = DATE_NOW.ToString("yyyyMMddHHmmss"),
+                        ["dateString"] = DATE_NOW.ToString("yyyyMMddHHmmss"),
                         ["USDT"] = usdt,
                         ["BTC"] = btc,
                         ["IDR"] = idr
@@ -142,6 +139,33 @@ namespace robot_coin
                     Console.WriteLine(ex.ToString());
                 }
             }
+
+            // ===================================Baca/Tulis data pakai DBContext=================================================================
+            //try
+            //{
+            //    DynamoDBContext context = new DynamoDBContext(client);
+            //    NicehashUSDT new_price_usdt = new()
+            //    {
+            //        AAVEUSDT = 12344
+            //    };
+            //    await context.SaveAsync(new_price_usdt);
+
+            //    var LastPrice = await context.LoadAsync<NicehashUSDT>(new_price_usdt.dateString);
+            //    var range_price_2H = DateTime.Now.AddHours(-2).ToString("yyyyMMddHHmm");
+            //    var search_2hours_price = context.ScanAsync<NicehashUSDT>(
+            //        new[]
+            //        {
+            //            new ScanCondition(
+            //                nameof(NicehashUSDT.dateString),
+            //                ScanOperator.GreaterThanOrEqual,
+            //                range_price_2H
+            //                )
+            //        });
+
+            //    var ListPrice2Hours = await search_2hours_price.GetRemainingAsync();
+            //}
+            //catch (Exception ex) { Console.WriteLine(ex.ToString()); }
+            // ===================================END Baca/Tulis data pakai DBContext=================================================================
 
             static async Task CreateTableIfExist(IAmazonDynamoDB client, string tableName)
             {
