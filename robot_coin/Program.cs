@@ -7,6 +7,12 @@ using Newtonsoft.Json.Linq;
 using robot_coin;
 
 //EnvironmentVariableTarget dihilangkan kalau deploy di linux
+
+var TELEGRAM_TOKEN_BOT = Environment.GetEnvironmentVariable("TELEGRAM_TOKEN_BOT", EnvironmentVariableTarget.User);
+var TELEGRAM_CHATID_ERROR = Environment.GetEnvironmentVariable("TELEGRAM_CHATID_ERROR", EnvironmentVariableTarget.User);
+var TELEGRAM_CHATID_STATUS = Environment.GetEnvironmentVariable("TELEGRAM_CHATID_STATUS", EnvironmentVariableTarget.User);
+var TELEGRAM_CHATID_INFO = Environment.GetEnvironmentVariable("TELEGRAM_CHATID_INFO", EnvironmentVariableTarget.User);
+
 var INDODAX_PRICE_URL = Environment.GetEnvironmentVariable("INDODAX_PRICE_URL", EnvironmentVariableTarget.User);
 var NICEHASH_PRICE_URL = Environment.GetEnvironmentVariable("NICEHASH_PRICE_URL", EnvironmentVariableTarget.User);
 
@@ -32,7 +38,13 @@ if (NICEHASH_PRICE_URL == null)
     Environment.Exit(0);
 }
 
-var _telegram = new TelegramBot();
+if (TELEGRAM_TOKEN_BOT == null || TELEGRAM_CHATID_ERROR == null || TELEGRAM_CHATID_STATUS == null || TELEGRAM_CHATID_INFO == null)
+{
+    Console.WriteLine("Telegram Key is null");
+    Environment.Exit(0);
+}
+
+var _telegram = new TelegramBot(TELEGRAM_TOKEN_BOT, TELEGRAM_CHATID_ERROR, TELEGRAM_CHATID_STATUS, TELEGRAM_CHATID_INFO);
 await _telegram.SendStatusAsync("Tgl start =>" + DATE_NOW.ToString("dd MMM yyyy HH:mm:ss") + $" >> " + DATE_NOW.ToString("yyyyMMddHHmmss"));
 
 var PriceNicehash = await GetPriceNicehashAsync();
@@ -50,7 +62,7 @@ if (PriceNicehash != null || PriceIndodax != null)
     if (PriceNicehash?.ADAUSDT > 0 || PriceNicehash?.ADABTC > 0 || PriceIndodax?.ada_idr > 0)
         await InsertCoin(client_db, "ADA", PriceNicehash?.ADAUSDT, PriceNicehash?.ADABTC, PriceIndodax?.ada_idr);
 
-    if (PriceNicehash?.BTCUSDT > 0  || PriceIndodax?.btc_idr > 0)
+    if (PriceNicehash?.BTCUSDT > 0 || PriceIndodax?.btc_idr > 0)
         await InsertCoin(client_db, "BTC", PriceNicehash?.BTCUSDT, 1, PriceIndodax?.btc_idr);
 
     if (PriceNicehash?.ETHUSDT > 0 || PriceNicehash?.ETHBTC > 0 || PriceIndodax?.eth_idr > 0)

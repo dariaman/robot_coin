@@ -6,17 +6,25 @@ namespace robot_coin
 {
     internal class TelegramBot
     {
-        public string TELEGRAM_TOKEN_BOT = Environment.GetEnvironmentVariable("TELEGRAM_TOKEN_BOT", EnvironmentVariableTarget.User);
-        public string TELEGRAM_CHATID_ERROR = Environment.GetEnvironmentVariable("TELEGRAM_CHATID_ERROR", EnvironmentVariableTarget.User);
-        public string TELEGRAM_CHATID_STATUS = Environment.GetEnvironmentVariable("TELEGRAM_CHATID_STATUS", EnvironmentVariableTarget.User);
-        public string TELEGRAM_CHATID_INFO = Environment.GetEnvironmentVariable("TELEGRAM_CHATID_INFO", EnvironmentVariableTarget.User);
+        string TOKEN_BOT;
+        string CHATID_ERROR { get; }
+        string CHATID_STATUS { get; }
+        string CHATID_INFO { get; }
+
+        public TelegramBot(string _TOKEN_BOT, string _CHATID_ERROR, string _CHATID_STATUS, string _CHATID_INFO)
+        {
+            TOKEN_BOT= _TOKEN_BOT;
+            CHATID_ERROR= _CHATID_ERROR;
+            CHATID_STATUS= _CHATID_STATUS;
+            CHATID_INFO= _CHATID_INFO;
+        }
 
         public async Task SendErrorAsync(string Msg)
         {
-            var bot = new TelegramBotClient(TELEGRAM_TOKEN_BOT);
+            var bot = new TelegramBotClient(TOKEN_BOT);
             try
             {
-                await bot.SendTextMessageAsync(TELEGRAM_CHATID_ERROR, Msg[..Math.Min(Msg.Length, 4095)], ParseMode.Html);
+                await bot.SendTextMessageAsync(CHATID_ERROR, Msg[..Math.Min(Msg.Length, 4095)], ParseMode.Html);
             }
             catch (Exception ex)
             {
@@ -26,10 +34,10 @@ namespace robot_coin
 
         public async Task SendMessageAsync(string Msg)
         {
-            var bot = new TelegramBotClient(TELEGRAM_TOKEN_BOT);
+            var bot = new TelegramBotClient(TOKEN_BOT);
             try
             {
-                await bot.SendTextMessageAsync(TELEGRAM_CHATID_INFO, Msg[..Math.Min(Msg.Length, 4095)], ParseMode.Html);
+                await bot.SendTextMessageAsync(CHATID_INFO, Msg[..Math.Min(Msg.Length, 4095)], ParseMode.Html);
             }
             catch (Exception ex)
             {
@@ -39,10 +47,10 @@ namespace robot_coin
 
         public async Task SendStatusAsync(string Msg)
         {
-            var bot = new TelegramBotClient(TELEGRAM_TOKEN_BOT);
+            var bot = new TelegramBotClient(TOKEN_BOT);
             try
             {
-                await bot.SendTextMessageAsync(TELEGRAM_CHATID_STATUS, Msg[..Math.Min(Msg.Length, 4095)], ParseMode.Html);
+                await bot.SendTextMessageAsync(CHATID_STATUS, Msg[..Math.Min(Msg.Length, 4095)], ParseMode.Html);
             }
             catch (Exception ex)
             {
