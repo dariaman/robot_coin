@@ -27,7 +27,7 @@ namespace robot_coin
             }
             catch (Exception ex)
             {
-                throw new Exception("Undefined Error (Send Exception) " + ex.Message);
+                throw new Exception("Undefined Error (Send Telegram Exception) " + ex.Message);
             }
         }
 
@@ -40,7 +40,7 @@ namespace robot_coin
             }
             catch (Exception ex)
             {
-                throw new Exception("Undefined Error (Send Exception) " + ex.Message);
+                throw new Exception("Undefined Error (Send Telegram Exception) " + ex.Message);
             }
         }
 
@@ -53,7 +53,7 @@ namespace robot_coin
             }
             catch (Exception ex)
             {
-                throw new Exception("Undefined Error (Send Exception) " + ex.Message);
+                throw new Exception("Undefined Error (Send Telegram Exception) " + ex.Message);
             }
         }
     }

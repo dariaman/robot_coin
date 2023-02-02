@@ -121,7 +121,8 @@ namespace robot_coin
                 var LastPrice = await GetLastCoinPrice(client, CoinCode);
                 if (LastPrice.USDT == usdt && LastPrice.BTC == btc && LastPrice.IDR == idr)
                 {
-                    Console.WriteLine($"{CoinCode} >> nilainya sama dengan sebelumnya {LastPrice.USDT} {LastPrice.BTC} {LastPrice.IDR}");
+                    await _telegram.SendMessageAsync($"{CoinCode} >> nilainya sebelumnya {LastPrice.USDT} | {LastPrice.BTC} | {LastPrice.IDR}" + "\n"
+                        + $"{CoinCode} >> nilainya insert {usdt} | {btc} | {idr}");
                     return;
                 }
 
@@ -144,7 +145,7 @@ namespace robot_coin
                 catch (Exception ex)
                 {
                     Console.WriteLine(ex.ToString());
-                    await _telegram.SendErrorAsync("Tgl =>" + DATE_NOW.ToString("dd MMM yyyy HH:mm:ss") + "\\n\\n" + (ex.InnerException?.Message ?? ex.Message));
+                    await _telegram.SendErrorAsync("Tgl =>" + DATE_NOW.ToString("dd MMM yyyy HH:mm:ss") + "\n" + (ex.InnerException?.Message ?? ex.Message));
                 }
             }
 
